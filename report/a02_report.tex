@@ -13,9 +13,9 @@
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!60!black]{hyperref}
 
 % ---------------------------------------------------------------- fill these in
-\newcommand{\studentname}{Your Name}
-\newcommand{\indexno}{Your Index Number}
-\newcommand{\githuburl}{https://github.com/your-username/en4554-a2}
+\newcommand{\studentname}{Perera P.L.P}
+\newcommand{\indexno}{220472T}
+\newcommand{\githuburl}{https://github.com/LuchithaP/Vision-Sem-7.git}
 % ------------------------------------------------------------------------------
 
 \captionsetup{font=small,labelfont=bf,skip=3pt}
@@ -38,9 +38,9 @@
 \begin{document}
 
 \begin{center}
-{\Large\bfseries EN4554 Assignment 2 --- Convolutional Neural Networks}\\[4pt]
+{\Large\bfseries EN4554 Assignment 2 - Convolutional Neural Networks}\\[4pt]
 \studentname \quad|\quad Index: \indexno \quad|\quad GitHub: \url{\githuburl}\\[2pt]
-{\small 19 October 2026 \quad|\quad PyTorch 2.11, Google Colab Tesla T4}
+{\small 19 October 2026}
 \end{center}
 
 \section*{Setup}
@@ -48,12 +48,11 @@ CIFAR-10 training images were split into 45{,}000 train / 5{,}000 validation ima
 classes are balanced, 467--532 per class). Per-channel mean $(0.4912, 0.4820, 0.4464)$ and std $(0.2472, 0.2436, 0.2617)$ were computed
 on the 45k training images only and used for all splits. All seeds (Python, NumPy, PyTorch, CUDA) are reset before every run. The
 whole dataset is held on the GPU and augmentation (random flip, random $32\times32$ crop of a 4-pixel zero-padded image, cutout, mixup)
-is done batch-wise on the GPU. The test set is loaded only once, at the end of Task~4. Every experiment is cached to JSON so that a
-Colab disconnect does not lose finished runs. All results are from a single seed, so differences of about $\pm0.5$ percentage points
+is done batch-wise on the GPU. The test set is loaded only once. All results are from a single seed, so differences of about $\pm0.5$ percentage points
 (pp) in validation accuracy are within noise (binomial standard error on 5k images $\approx 0.45$~pp at 89\%).
 
 %==================================================================================================
-\section{Task 1 --- Backpropagation}
+\section{Task 1 - Backpropagation}
 \textbf{(a) Implementation.} Each layer caches what it needs in \texttt{forward} and returns $\partial L/\partial(\text{input})$ from
 \texttt{backward}; no autograd is used. The MLP is a list of layers, and its \texttt{backward} runs them in reverse.
 \begin{lstlisting}
@@ -149,7 +148,7 @@ and the back-propagated errors shrink by $\sqrt{2}$ per layer going backward. In
 the two effects cancel, which is why the curve is flat, but the overall scale is about 50$\times$ smaller than with He initialisation.
 
 %==================================================================================================
-\section{Task 2 --- Optimizers}
+\section{Task 2 - Optimizers}
 \textbf{(a) Implementation and check.} Both optimizers subclass \texttt{torch.optim.Optimizer} and follow PyTorch's conventions:
 L2 weight decay is added to the gradient, and the first momentum buffer equals the first gradient. The core of the Adam step:
 \begin{lstlisting}
@@ -178,8 +177,10 @@ Adam & lr $3\!\times\!10^{-3}$, $\beta$=(0.8, 0.99), wd $10^{-4}$ & $1.6\times10
 \end{table}
 \textit{Interpretation.} SGD is bit-for-bit identical because it performs the same floating-point operations in the same order. Adam
 differs only at the $10^{-16}$ level because PyTorch evaluates the algebraically equal form
-$\frac{\eta}{1-\beta_1^t}\,m/(\sqrt{v}/\sqrt{1-\beta_2^t}+\epsilon)$, which rounds differently. Both implementations, including bias
-correction and weight decay, match the reference.
+\[
+\theta \leftarrow \theta - \frac{\eta}{1-\beta_1^t}\cdot\frac{m}{\sqrt{v}/\sqrt{1-\beta_2^t}+\epsilon},
+\]
+which rounds differently. Both implementations, including bias correction and weight decay, match the reference.
 
 \textbf{(b) Trajectories on $f(x,y)=\tfrac12(x^2+50y^2)$.} The curvatures are 1 and 50 (condition number $\kappa=50$), so plain gradient
 descent is stable only for $\eta<2/50=0.04$. All runs start at $(-9,2)$ and take 60 steps.
@@ -242,7 +243,7 @@ earlier overfitting: its validation accuracy peaks at epoch 8 (76.6\%) and then 
 \end{itemize}
 
 %==================================================================================================
-\section{Task 3 --- Regularization and residual connections}
+\section{Task 3 - Regularization and residual connections}
 \textbf{(a) Regularization with 5k training images.} The same small CNN, \emph{with} batch norm after every conv, was trained on
 the first 5{,}000 training images (all classes 470--520) and evaluated on the 5k validation split. Every run uses SGD with momentum 0.9,
 lr 0.05 with cosine decay, batch 128 and 60 epochs. Each regulariser is added to the baseline alone: weight decay $5\times10^{-4}$,
@@ -368,7 +369,7 @@ as residual-20 at the same cost (453~s vs 431~s for plain-56).
 \end{itemize}
 
 %==================================================================================================
-\section{Task 4 --- Best CNN with $\le$\,500k parameters and $\le$\,20 epochs}
+\section{\texorpdfstring{Task 4 - Best CNN with $\le$\,500k parameters and $\le$\,20 epochs}{Task 4 - Best CNN with at most 500k parameters and 20 epochs}}
 \textbf{Design.} A wide, shallow ResNet: a $3\times3$ conv stem (32 channels), then stages of [2, 2, 1] basic blocks with
 32/64/128 channels (stride 2 between stages), global average pooling and FC. It has 12 weight layers and \textbf{401{,}194 parameters}.
 The wide early stages keep compute at high resolution, and most of the parameters sit in the 128-channel $8\times8$ stage. Shortcuts
